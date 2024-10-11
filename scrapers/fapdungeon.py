@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 BASE_URL = "https://www.fapdungeon.com/"
-DATA_PATH = pathlib.Path("data/")
+DATA_PATH = pathlib.Path("pages/data")
 HEADERS = {"User-Agent": FakeUserAgent().chrome}
 
 # Criando um novo logger
