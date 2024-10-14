@@ -5,7 +5,7 @@ if os.path.exists("scrapers/fapdungeon.py"):
 
     fd.main()
 
-if os.path.exists("scrapers/boobieblog.py"):
-    import scrapers.boobieblog as bb
+#if os.path.exists("scrapers/boobieblog.py"):
+#    import scrapers.boobieblog as bb
 
-    bb.main()
+#    bb.main()
