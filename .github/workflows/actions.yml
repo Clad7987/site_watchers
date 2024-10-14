@@ -4,6 +4,9 @@ name: Update JSON File
 on:
     schedule:
         - cron: "0 0 * * *" # Rodar todos os dias à meia-noite (UTC)
+    push:
+        branchs:
+            - main
 
 jobs:
     update-json:
