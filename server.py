@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Caminho para o arquivo JSON
-DATA_FILE = "data/fapdungeon.json"
+DATA_FILE = "pages/data/fapdungeon.json"
 
 
 # Rota para servir arquivos estáticos
@@ -31,7 +31,7 @@ def model_style():
 
 @app.route("/data/<path:filename>")
 def serve_data(filename):
-    return send_from_directory("data", filename)
+    return send_from_directory("./pages/data", filename)
 
 
 @app.route("/favorite", methods=["POST"])
