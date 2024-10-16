@@ -272,6 +272,7 @@
 					nextItem.onclick = () => {
 						currentPage = page + 1;
 						updateUrlAndRender(currentPage);
+						window.scrollTo({ top: 0, behavior: "smooth" });
 					};
 					pagination.appendChild(nextItem);
 				}
