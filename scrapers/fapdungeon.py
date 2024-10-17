@@ -10,11 +10,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 
 # Configuração do logging
+log_path = pathlib.Path("../logs")
+log_path.mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("../logs/fapdungeon_scraping.log"),
+        logging.FileHandler(str(log_path / "fapdungeon_scraping.log")),
     ],
 )
 
