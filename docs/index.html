@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Galeria de Modelos</title>
+		<link rel="stylesheet" href="style.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+		/>
+		<style>
+			.notification-card {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				padding: 15px 20px;
+				background-color: #4caf50; /* Verde para sucesso */
+				color: white;
+				border-radius: 5px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				opacity: 0;
+				transform: translateX(100%);
+				transition: opacity 0.3s ease, transform 0.3s ease;
+				z-index: 1000;
+			}
+
+			.notification-card.error {
+				background-color: #f44336; /* Vermelho para erro */
+			}
+
+			/* Barra de progresso */
+			.progress-bar {
+				height: 5px;
+				background-color: rgba(255, 255, 255, 0.8);
+				width: 100%;
+				transition: none; /* Sem transição por padrão */
+			}
+
+			.notification-card.show {
+				opacity: 1;
+				transform: translateX(0);
+			}
+
+			/* Estilo para a galeria de favoritos */
+			#favorite-gallery-wrapper {
+				overflow-x: auto; /* Habilita o scroll horizontal */
+				white-space: nowrap; /* Mantém os itens em uma única linha */
+				padding: 10px 0;
+			}
+
+			#favorite-gallery .model-container {
+				display: inline-block;
+				width: calc(20% - 10px); /* 5 itens por linha com espaçamento */
+				margin-right: 10px;
+				vertical-align: top; /* Alinha os itens ao topo */
+			}
+		</style>
+		<script>
+			const ITEMS_PER_PAGE = 18; // Quantos modelos regulares por página
+			let models = []; // Armazena os modelos
+			let currentPage = 1; // Página atual
+
+			async function loadModels() {
+				const response = await fetch("data/fapdungeon.json");
+				models = await response.json();
+
+				models.sort(
+					(a, b) => (b.favorite === true) - (a.favorite === true)
+				);
+
+				const params = new URLSearchParams(window.location.search);
+				const pageParam = parseInt(params.get("page"), 10); // Pega o parâmetro da página
+				currentPage = isNaN(pageParam) ? 1 : pageParam; // Se não houver, inicia na página 1
+
+				renderPage(currentPage); // Renderiza a página inicial
+			}
+
+			function renderPage(page) {
+				const start = (page - 1) * ITEMS_PER_PAGE; // Índice inicial
+				const end = start + ITEMS_PER_PAGE; // Índice final
+				const favoriteGallery =
+					document.getElementById("favorite-gallery");
+				const regularGallery =
+					document.getElementById("regular-gallery");
+
+				favoriteGallery.innerHTML = ""; // Limpar a galeria de favoritos
+				regularGallery.innerHTML = ""; // Limpar a galeria regular
+
+				// Filtrar modelos favoritos
+				const favoriteModels = models.filter((model) => model.favorite);
+				// Filtrar modelos regulares para a página atual
+				const regularModelsToDisplay = models
+					.filter((model) => !model.favorite)
+					.slice(start, end);
+
+				// Renderizar modelos favoritos
+				favoriteModels.forEach((model) => {
+					addModelToGallery(favoriteGallery, model, true);
+				});
+
+				// Renderizar modelos regulares
+				regularModelsToDisplay.forEach((model) => {
+					addModelToGallery(regularGallery, model, false);
+				});
+
+				updatePagination(page); // Atualiza a paginação
+			}
+
+			function addModelToGallery(gallery, model, isFavorite) {
+				const modelImages = model.content.filter(
+					(item) => !item.includes(".mp4")
+				);
+				const randomImage = modelImages[0]; // Pega a primeira imagem
+
+				// Criar elemento de imagem
+				const imgElement = document.createElement("img");
+				imgElement.src = randomImage;
+				imgElement.alt = model.name;
+				imgElement.className = "model-image";
+				imgElement.style.cursor = "pointer";
+
+				// Criar elemento para o nome
+				const nameElement = document.createElement("p");
+				nameElement.textContent = model.name;
+				nameElement.className = "has-text-centered";
+
+				// Criar contêiner para a imagem e o nome
+				const container = document.createElement("div");
+				container.className =
+					"model-container card" + (model.favorite ? " fav" : "");
+				container.style = "margin: 10px;";
+
+				// Adicionar eventos de mouse
+				container.onmouseenter = () => {
+					let interval = setInterval(() => {
+						const randomImageIndex = Math.floor(
+							Math.random() * modelImages.length
+						);
+						imgElement.src = modelImages[randomImageIndex];
+					}, 500);
+
+					container.onmouseleave = () => {
+						clearInterval(interval);
+						imgElement.src = randomImage; // Volta à imagem original
+					};
+				};
+
+				// Ação ao clicar no item
+				container.onclick = () => {
+					showModelDetails(model.name); // Redireciona para os detalhes do modelo
+				};
+
+				// Criar botão de favorito
+				const favoriteButton = document.createElement("button");
+				favoriteButton.textContent = model.favorite
+					? "Desfavoritar"
+					: "Favoritar";
+				favoriteButton.className = `button ${
+					model.favorite ? "is-info" : "is-danger"
+				}`;
+				favoriteButton.style.marginTop = "auto";
+
+				// Ação ao clicar no botão de favorito
+				favoriteButton.onclick = async (event) => {
+					event.stopPropagation(); // Impede o clique de ir para os detalhes do modelo
+					const response = await fetch("/favorite", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ link: model.link }),
+					});
+
+					if (response.ok) {
+						showNotification(
+							`${model.name} adicionado aos favoritos!`
+						);
+					} else {
+						showNotification("Erro ao adicionar aos favoritos.");
+					}
+				};
+
+				// Adicionando conteúdo ao contêiner
+				const imgContainer = document.createElement("div");
+				imgContainer.className = "card-image";
+				imgContainer.appendChild(imgElement);
+				container.appendChild(imgContainer);
+				container.appendChild(nameElement);
+				container.appendChild(favoriteButton);
+
+				// Adicionar à galeria
+				gallery.appendChild(container);
+			}
+
+			function showNotification(message, type = "success") {
+				const notificationCard =
+					document.getElementById("notification-card");
+				const progressBar = document.getElementById("progress-bar");
+
+				// Define a mensagem e o tipo de notificação (sucesso ou erro)
+				notificationCard.textContent = message;
+				notificationCard.className = `notification-card ${type}`;
+
+				// Mostra o card de notificação
+				notificationCard.classList.add("show");
+
+				// Reinicia a barra de progresso
+				progressBar.style.transition = "none"; // Remove a transição para resetar a largura
+				progressBar.style.width = "100%"; // Define a largura inicial da barra
+				setTimeout(() => {
+					progressBar.style.transition = "width 5s linear"; // Adiciona a transição após o reset
+					progressBar.style.width = "0%"; // Anima a barra para 0% em 5 segundos
+				}, 10);
+
+				// Esconde o card após o tempo definido
+				setTimeout(() => {
+					notificationCard.classList.remove("show");
+				}, 5000);
+			}
+
+			function updatePagination(page) {
+				const pagination = document.getElementById("pagination");
+				pagination.innerHTML = "";
+
+				const totalPages = Math.ceil(
+					models.filter((model) => !model.favorite).length /
+						ITEMS_PER_PAGE
+				);
+				const maxPagesToShow = 5;
+				let startPage = page - Math.floor(maxPagesToShow / 2);
+				let endPage = page + Math.floor(maxPagesToShow / 2);
+
+				if (startPage < 1) {
+					startPage = 1;
+					endPage = Math.min(totalPages, maxPagesToShow);
+				}
+				if (endPage > totalPages) {
+					endPage = totalPages;
+					startPage = Math.max(1, totalPages - maxPagesToShow + 1);
+				}
+
+				if (page > 1) {
+					const prevItem = document.createElement("button");
+					prevItem.textContent = "Anterior";
+					prevItem.className = "button is-link";
+					prevItem.onclick = () => {
+						currentPage = page - 1;
+						updateUrlAndRender(currentPage);
+					};
+					pagination.appendChild(prevItem);
+				}
+
+				for (let i = startPage; i <= endPage; i++) {
+					const pageItem = document.createElement("button");
+					pageItem.textContent = i;
+					pageItem.className = "button is-info";
+					pageItem.onclick = () => {
+						currentPage = i;
+						updateUrlAndRender(currentPage);
+					};
+					if (i === page) {
+						pageItem.classList.add("is-active");
+					}
+					pagination.appendChild(pageItem);
+				}
+
+				if (page < totalPages) {
+					const nextItem = document.createElement("button");
+					nextItem.textContent = "Próximo";
+					nextItem.className = "button is-link";
+					nextItem.onclick = () => {
+						currentPage = page + 1;
+						updateUrlAndRender(currentPage);
+						window.scrollTo({ top: 0, behavior: "smooth" });
+					};
+					pagination.appendChild(nextItem);
+				}
+			}
+
+			document.addEventListener("DOMContentLoaded", loadModels);
+
+			function updateUrlAndRender(page) {
+				const newUrl = `${window.location.pathname}?page=${page}`;
+				window.history.pushState({ page }, "", newUrl);
+				renderPage(page);
+			}
+
+			function showModelDetails(link) {
+				window.location.href = `model?link=${encodeURIComponent(link)}`;
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<h1 class="title has-text-centered">Galeria de Modelos</h1>
+
+			<!-- Notificação com barra de progresso -->
+			<div id="notification-card" class="notification-card">
+				<div id="progress-bar" class="progress-bar"></div>
+			</div>
+
+			<!-- Galeria de Modelos Favoritos -->
+			<div id="favorite-gallery-wrapper">
+				<div id="favorite-gallery"></div>
+			</div>
+
+			<hr />
+
+			<!-- Galeria de Modelos Regulares -->
+			<div
+				id="regular-gallery"
+				class="columns is-multiline is-fullhd"
+			></div>
+
+			<!-- Paginação -->
+			<div id="pagination" class="buttons is-centered"></div>
+		</div>
+	</body>
+</html>

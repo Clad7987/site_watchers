@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Detalhes do Modelo</title>
+		<link rel="stylesheet" href="model.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+		/>
+		<script>
+			async function loadModelDetails() {
+				const params = new URLSearchParams(window.location.search);
+				const link = params.get("link");
+				const response = await fetch("data/fapdungeon.json");
+				const models = await response.json();
+				const model = models.find((m) => m.name === link);
+
+				if (model) {
+					const detailSection =
+						document.getElementById("model-details");
+					model.content.forEach((content) => {
+						if (
+							content.includes(".mp4") ||
+							content.includes(".webm")
+						) {
+							const iframeElement =
+								document.createElement("iframe");
+							iframeElement.src = content; // Verifique se a URL do vídeo é da web e permite incorporação
+							iframeElement.width = "500"; // Largura desejada do iframe
+							iframeElement.height = "300"; // Altura desejada do iframe
+							iframeElement.allowFullscreen = true; // Permite o modo de tela cheia
+							detailSection.appendChild(iframeElement);
+						} else {
+							const imgElement = document.createElement("img");
+							imgElement.src = content;
+							imgElement.alt = model.name;
+							imgElement.className = "model-full-image";
+							detailSection.appendChild(imgElement);
+						}
+					});
+				} else {
+					console.error("Modelo não encontrado");
+				}
+			}
+
+			document.addEventListener("DOMContentLoaded", loadModelDetails);
+		</script>
+	</head>
+	<body>
+		<div class="">
+			<button
+				id="back-button"
+				class="button is-primary"
+				onclick="window.location.href='/'"
+				style="margin: 20px"
+			>
+				Voltar à Galeria
+			</button>
+			<h1 class="title">Detalhes do Modelo</h1>
+			<div id="model-details" class="columns is-multiline"></div>
+		</div>
+	</body>
+</html>

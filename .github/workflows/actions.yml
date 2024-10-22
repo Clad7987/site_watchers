@@ -39,7 +39,7 @@ jobs:
               run: |
                   git config --local user.name "github-actions[bot]"
                   git config --local user.email "github-actions[bot]@users.noreply.github.com"
-                  git add pages/  # Especificar o caminho do arquivo JSON gerado
+                  git add docs/  # Especificar o caminho do arquivo JSON gerado
                   git commit -m "Automated update of JSON file"
                   git push
               env:
