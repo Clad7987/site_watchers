@@ -139,6 +139,7 @@ def get_model_data(model: Dict) -> Dict:
     for page in model_pages:
         model["content"].extend(get_model_content(page))
     model["favorite"] = False
+    model['like'] = 0
     return model
 
 
@@ -194,9 +195,12 @@ def main() -> None:
         favorites = {
             item["name"]: item["favorite"] for item in data if item["favorite"]
         }
+        likes = {item['name']: item['like'] for item in data}
         for item in content:
             if item["name"] in favorites:
                 item["favorite"] = True
+            if item['name'] in likes.keys():
+                item['like'] = likes[item['name']]
 
     with open(output_file, "w", encoding="utf-8") as file:
         json.dump(content, file, separators=(",", ":"))

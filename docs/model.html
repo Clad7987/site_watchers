@@ -10,11 +10,22 @@
 			href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
 		/>
 		<script>
+			let models = []
+			async function loadModelData(url) {
+				try {
+					const response = await fetch(url);
+					const data = await response.json();
+					models = models.concat(data);
+				} catch (err) {
+					console.error(err);
+				}
+			}
 			async function loadModelDetails() {
 				const params = new URLSearchParams(window.location.search);
 				const link = params.get("link");
-				const response = await fetch("data/fapdungeon.json");
-				const models = await response.json();
+				await loadModelData('data/fapdungeon.json')
+				await loadModelData("data/waifubitches.json");
+				
 				const model = models.find((m) => m.name === link);
 
 				if (model) {

@@ -61,13 +61,30 @@
 			let models = []; // Armazena os modelos
 			let currentPage = 1; // Página atual
 
+			async function getModels(url) {
+				try {
+					const response = await fetch(url);
+					const data = await response.json();
+					models = models.concat(data);
+				} catch (err) {
+					console.error(err);
+				}
+			}
+
 			async function loadModels() {
-				const response = await fetch("data/fapdungeon.json");
-				models = await response.json();
+				await getModels("data/fapdungeon.json");
+				await getModels('data/waifubitches.json')
+				console.log(models.length / ITEMS_PER_PAGE)
+
+				// models.sort(
+				// 	(a, b) => (b.favorite === true) - (a.favorite === true)
+				// );
 
 				models.sort(
-					(a, b) => (b.favorite === true) - (a.favorite === true)
-				);
+					(a, b) => (b.like) - (a.like)
+				)
+
+				console.log(models)
 
 				const params = new URLSearchParams(window.location.search);
 				const pageParam = parseInt(params.get("page"), 10); // Pega o parâmetro da página
@@ -111,7 +128,7 @@
 				const modelImages = model.content.filter(
 					(item) => !item.includes(".mp4")
 				);
-				const randomImage = modelImages[0]; // Pega a primeira imagem
+				const randomImage = modelImages[3]; // Pega a primeira imagem
 
 				// Criar elemento de imagem
 				const imgElement = document.createElement("img");
@@ -128,7 +145,7 @@
 				// Criar contêiner para a imagem e o nome
 				const container = document.createElement("div");
 				container.className =
-					"model-container card" + (model.favorite ? " fav" : "");
+					"model-container card" + (model.favorite ? " fav" : "is-fullheight");
 				container.style = "margin: 10px;";
 
 				// Adicionar eventos de mouse
@@ -152,24 +169,27 @@
 				};
 
 				// Criar botão de favorito
+				const buttonDiv = document.createElement('div')
+				buttonDiv.className = 'is-flex is-align-items-center is-justify-content-center'
 				const favoriteButton = document.createElement("button");
-				favoriteButton.textContent = model.favorite
-					? "Desfavoritar"
-					: "Favoritar";
-				favoriteButton.className = `button ${
-					model.favorite ? "is-info" : "is-danger"
-				}`;
+				favoriteButton.textContent = 'Like'
+				favoriteButton.className = `button is-success`;
 				favoriteButton.style.marginTop = "auto";
+				const likes = document.createElement('p')
+				likes.innerText = model.like
+				likes.className = 'ml-1 is-size-5'
+				buttonDiv.appendChild(favoriteButton)
+				buttonDiv.appendChild(likes)
 
 				// Ação ao clicar no botão de favorito
 				favoriteButton.onclick = async (event) => {
 					event.stopPropagation(); // Impede o clique de ir para os detalhes do modelo
-					const response = await fetch("/favorite", {
+					const response = await fetch("/like", {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
 						},
-						body: JSON.stringify({ link: model.link }),
+						body: JSON.stringify({ name: model.name }),
 					});
 
 					if (response.ok) {
@@ -187,7 +207,7 @@
 				imgContainer.appendChild(imgElement);
 				container.appendChild(imgContainer);
 				container.appendChild(nameElement);
-				container.appendChild(favoriteButton);
+				container.appendChild(buttonDiv);
 
 				// Adicionar à galeria
 				gallery.appendChild(container);
@@ -241,6 +261,14 @@
 				}
 
 				if (page > 1) {
+					const firstItem = document.createElement('button')
+					firstItem.textContent = "Primeira";
+					firstItem.className = "button is-link";
+					firstItem.onclick = () => {
+						currentPage = 1;
+						updateUrlAndRender(currentPage);
+					};
+					pagination.appendChild(firstItem);
 					const prevItem = document.createElement("button");
 					prevItem.textContent = "Anterior";
 					prevItem.className = "button is-link";
@@ -275,6 +303,15 @@
 						window.scrollTo({ top: 0, behavior: "smooth" });
 					};
 					pagination.appendChild(nextItem);
+					const lastItem = document.createElement('button')
+					lastItem.textContent = 'Último'
+					lastItem.className = 'button is-info'
+					lastItem.onclick = () => {
+						currentPage = totalPages -1
+						updateUrlAndRender(currentPage)
+						window.scrollTo({ top: 0, behavior: "smooth" });
+					}
+					pagination.appendChild(lastItem)
 				}
 			}
 
