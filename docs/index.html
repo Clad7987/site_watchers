@@ -56,10 +56,74 @@
 				vertical-align: top; /* Alinha os itens ao topo */
 			}
 		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1 class="title has-text-centered">Galeria de Modelos</h1>
+
+			<div class="field has-addons has-text-centered">
+				<div class="control is-expanded">
+					<input id="search-input" class="input" type="text" placeholder="Buscar modelos..." />
+				</div>
+				<div class="control">
+					<button id="search-button" class="button is-info">Buscar</button>
+				</div>
+			</div>
+
+
+			<!-- Notificação com barra de progresso -->
+			<div id="notification-card" class="notification-card">
+				<div id="progress-bar" class="progress-bar"></div>
+			</div>
+
+			<!-- Galeria de Modelos Favoritos -->
+			<div id="favorite-gallery-wrapper">
+				<div id="favorite-gallery"></div>
+			</div>
+
+			<hr />
+
+			<!-- Galeria de Modelos Regulares -->
+			<div
+				id="regular-gallery"
+				class="columns is-multiline is-fullhd"
+			></div>
+
+			<!-- Paginação -->
+			<div id="pagination" class="buttons is-centered"></div>
+		</div>
 		<script>
 			const ITEMS_PER_PAGE = 18; // Quantos modelos regulares por página
 			let models = []; // Armazena os modelos
 			let currentPage = 1; // Página atual
+
+			let filteredModels = []; // Armazena modelos filtrados
+
+			// Função para filtrar modelos com base no texto de busca
+			function filterModels(searchTerm) {
+				if (!searchTerm) {
+					// Se não houver termo de busca, exibe todos os modelos
+					filteredModels = models;
+				} else {
+					const lowerCaseTerm = searchTerm.toLowerCase();
+					filteredModels = models.filter(model => model.name.toLowerCase().includes(lowerCaseTerm));
+				}
+				renderPage(currentPage); // Atualiza a renderização com os modelos filtrados
+			}
+
+			// Adiciona evento de clique ao botão de busca
+			document.getElementById("search-button").addEventListener("click", () => {
+				const searchTerm = document.getElementById("search-input").value.trim();
+				filterModels(searchTerm);
+			});
+
+			// Adiciona evento de tecla ao campo de busca para permitir buscar ao pressionar 'Enter'
+			document.getElementById("search-input").addEventListener("keypress", (event) => {
+				if (event.key === "Enter") {
+					const searchTerm = event.target.value.trim();
+					filterModels(searchTerm);
+				}
+			});
 
 			async function getModels(url) {
 				try {
@@ -75,6 +139,7 @@
 				await getModels("data/fapdungeon.json");
 				await getModels('data/waifubitches.json')
 				console.log(models.length / ITEMS_PER_PAGE)
+				filteredModels = models
 
 				// models.sort(
 				// 	(a, b) => (b.favorite === true) - (a.favorite === true)
@@ -107,7 +172,7 @@
 				// Filtrar modelos favoritos
 				const favoriteModels = models.filter((model) => model.favorite);
 				// Filtrar modelos regulares para a página atual
-				const regularModelsToDisplay = models
+				const regularModelsToDisplay = filteredModels
 					.filter((model) => !model.favorite)
 					.slice(start, end);
 
@@ -245,7 +310,7 @@
 
 				const totalPages = Math.ceil(
 					models.filter((model) => !model.favorite).length /
-						ITEMS_PER_PAGE
+					ITEMS_PER_PAGE
 				);
 				const maxPagesToShow = 5;
 				let startPage = page - Math.floor(maxPagesToShow / 2);
@@ -307,7 +372,7 @@
 					lastItem.textContent = 'Último'
 					lastItem.className = 'button is-info'
 					lastItem.onclick = () => {
-						currentPage = totalPages -1
+						currentPage = totalPages - 1
 						updateUrlAndRender(currentPage)
 						window.scrollTo({ top: 0, behavior: "smooth" });
 					}
@@ -327,31 +392,5 @@
 				window.location.href = `model?link=${encodeURIComponent(link)}`;
 			}
 		</script>
-	</head>
-	<body>
-		<div class="container">
-			<h1 class="title has-text-centered">Galeria de Modelos</h1>
-
-			<!-- Notificação com barra de progresso -->
-			<div id="notification-card" class="notification-card">
-				<div id="progress-bar" class="progress-bar"></div>
-			</div>
-
-			<!-- Galeria de Modelos Favoritos -->
-			<div id="favorite-gallery-wrapper">
-				<div id="favorite-gallery"></div>
-			</div>
-
-			<hr />
-
-			<!-- Galeria de Modelos Regulares -->
-			<div
-				id="regular-gallery"
-				class="columns is-multiline is-fullhd"
-			></div>
-
-			<!-- Paginação -->
-			<div id="pagination" class="buttons is-centered"></div>
-		</div>
 	</body>
 </html>
