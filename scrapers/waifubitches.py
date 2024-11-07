@@ -68,6 +68,14 @@ urls = [
     'https://waifubitches.com/model/Yoshinobi',
     'https://waifubitches.com/model/Yureta',
     'https://waifubitches.com/model/Yuzu-Pyon',
+    'https://waifubitches.com/model/Goth-Egg',
+    'https://waifubitches.com/model/Todopokie',
+    'https://waifubitches.com/model/Win-Winry',
+    'https://waifubitches.com/model/Mimsy',
+    'https://waifubitches.com/model/Hane-Ame',
+    'https://waifubitches.com/model/Kalinka-Fox',
+    'https://waifubitches.com/model/Jessica-Nigri',
+    ''
 ]
 
 data= []
